@@ -1,6 +1,6 @@
 {
   "name": "@jswork/url-sync-flat",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "private": true,
   "description": "Lightweight utility syncing flat state into URL query parameters.",
   "npmClient": "pnpm",
@@ -23,6 +23,7 @@
     "@jest/globals": "^30.2.0",
     "@jswork/style-guide": "^1.0.3",
     "@jswork/tsup-banner": "^1.0.4",
+    "@swc/core": "^1.13.5",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.11",
     "esbuild-plugin-replace": "^1.4.0",
