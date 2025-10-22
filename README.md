@@ -13,11 +13,34 @@ yarn add @jswork/@jswork/url-sync-flat
 
 ## usage
 ```js
-import urlSyncFlat from '@jswork/@jswork/url-sync-flat';
+import UrlSyncFlat from '@jswork/@jswork/url-sync-flat';
 
-urlSyncFlat(1024);
+const sync = new UrlSyncFlat();
 
-// [1000, 0, 20, 4]
+// 设置参数
+sync.set('name', 'afeiship');
+sync.set('age', 18);
+// => url: ?name=afeiship&age=18
+
+// 获取参数
+const name = sync.get('name'); // 'afeiship'
+const age = sync.get('age');   // 18
+
+// 获取多个参数
+const { name: n, age: a } = sync.gets(['name', 'age']);
+// n: 'afeiship', a: 18
+
+// 移除参数
+sync.remove('age');
+// => url: ?name=afeiship
+
+// 清除所有参数
+sync.clear();
+// => url: ?
+
+// 附加到 URL
+const url = sync.attach('https://www.example.com?id=1');
+// url: 'https://www.example.com?id=1&name=afeiship&age=18' (假设之前设置了name和age)
 ```
 
 ## license
