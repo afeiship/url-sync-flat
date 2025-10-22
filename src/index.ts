@@ -66,25 +66,49 @@ function readQueryString(routerType: 'browser' | 'hash'): string {
  */
 function writeQueryString(routerType: 'browser' | 'hash', qp: URLSearchParams, replace: boolean) {
   if (typeof window === 'undefined') return;
+
   const qs = qp.toString();
+
   if (routerType === 'browser') {
     const pathname = window.location.pathname || '';
     const hash = window.location.hash || '';
     const newUrl = `${pathname}${qs ? '?' + qs : ''}${hash}`;
-    if (replace) window.history.replaceState(null, '', newUrl);
-    else window.history.pushState(null, '', newUrl);
+    if (replace) {
+      window.history.replaceState(null, '', newUrl);
+    } else {
+      window.history.pushState(null, '', newUrl);
+    }
     return;
   }
+
   // hash mode
   const rawHash = window.location.hash || '';
   const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
   const idx = hash.indexOf('?');
   const base = idx >= 0 ? hash.slice(0, idx) : hash;
   const newHash = `${base}${qs ? '?' + qs : ''}`;
-  const pathnameSearch = `${window.location.pathname || ''}${window.location.search || ''}`;
-  const newUrl = `${pathnameSearch}#${newHash}`;
-  if (replace) window.history.replaceState(null, '', newUrl);
-  else window.history.pushState(null, '', newUrl);
+  const newUrl = `${window.location.pathname || ''}${window.location.search || ''}#${newHash}`;
+
+  // Update URL via history API
+  if (replace) {
+    window.history.replaceState(null, '', newUrl);
+  } else {
+    window.history.pushState(null, '', newUrl);
+  }
+
+  // Manually trigger hashchange event if hash actually changed
+  if (window.location.hash !== `#${newHash}`) {
+    // This shouldn't happen due to replaceState, but included for safety
+    window.location.hash = newHash;
+  } else {
+    // Since history.replaceState/pushState doesn't fire hashchange,
+    // we dispatch it manually.
+    const event = new HashChangeEvent('hashchange', {
+      oldURL: window.location.href.replace(/#[^]*$/, '') + rawHash,
+      newURL: window.location.href.replace(/#[^]*$/, '') + '#' + newHash
+    });
+    window.dispatchEvent(event);
+  }
 }
 
 export default class UrlSyncFlatClass {
