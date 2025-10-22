@@ -1,26 +1,25 @@
 /**
- * AI: https://github.com/copilot/c/593e75b6-f7bc-4d0b-8904-84fef121ea15
- *
  * UrlSyncFlatClass - 仅同步扁平 key:value（非嵌套 JSON）到 URL query
- * - 每个字段作为独立 query key 写入（prefix + field）
- * - 读取时尝试把数字/布尔字符串转换回对应类型
- * - 支持 replaceState/pushState、防抖 schedule/flush/cancel、popstate 监听
+ * 支持两种路由类型：browser (location.search) / hash (location.hash 中的 query)
  *
- * 用法示例：
- *  const sync = new UrlSyncFlatClass({ prefix: 't1_', fields: ['page','pageSize','keyword'], replaceState: true });
- *  const init = sync.readInitialState({ defaults: { page: 1, pageSize: 10, keyword: '' } });
- *  // 用 init 初始化 UI/state
- *  const detach = sync.attachPopstateListener(next => { // set UI });
- *  // 同步 state 到 URL
- *  //sync.schedule({ page: 2, pageSize: 20, keyword: 'abc' });
+ * 变化：
+ * - 新增 opts.routerType: 'browser' | 'hash'，默认 'browser'
+ * - 根据 routerType 选择读取/写入 query 的策略
+ * - 对于 hash 模式，使用 hashchange 事件监听；对于 browser 模式，使用 popstate 监听
+ *
+ * 用法示例（hash）：
+ *  const sync = new UrlSyncFlatClass({ routerType: 'hash', prefix: 't1_', fields: ['page','keyword'] });
+ *  const init = sync.readInitialState({ defaults: { page: 1, keyword: '' } });
+ *  this.detach = sync.attachPopstateListener(next => { // set UI });
+ *  sync.schedule({ page: 2, keyword: 'abc' });
  *  // 卸载时 detach(); sync.cancel();
- **/
-
- export type UrlSyncFlatOptions = {
+ */
+export type UrlSyncFlatOptions = {
   prefix?: string; // 可选前缀，默认 ''
-  fields?: string[]; // 需要同步的字段列表（必传或为空数组表示不限制但建议传）
+  fields?: string[]; // 需要同步的字段列表（可选）
   replaceState?: boolean; // true 使用 replaceState（默认），false 使用 pushState
   debounceMs?: number; // schedule 的防抖时长（ms）
+  routerType?: 'browser' | 'hash'; // 'browser' -> use location.search; 'hash' -> use location.hash (default 'browser')
 };
 
 export type UrlSyncFlatState = Record<string, string | number | boolean | undefined>;
@@ -30,6 +29,7 @@ const DEFAULTS: Required<UrlSyncFlatOptions> = {
   fields: [],
   replaceState: true,
   debounceMs: 200,
+  routerType: 'browser',
 };
 
 function keyOf(prefix: string, k: string) {
@@ -38,22 +38,73 @@ function keyOf(prefix: string, k: string) {
 
 function parsePrimitive(v: string | null): string | number | boolean | undefined {
   if (v === null) return undefined;
-  // boolean
   if (v === 'true') return true;
   if (v === 'false') return false;
-  // integer/float
   if (/^[+-]?\d+(\.\d+)?$/.test(v)) {
     const n = Number(v);
     if (!Number.isNaN(n)) return n;
   }
-  // default string
   return v;
+}
+
+/**
+ * Helper: obtain query string according to routerType.
+ * - browser: uses window.location.search (without leading '?')
+ * - hash: inspects window.location.hash and returns substring after first '?' (if any)
+ */
+function readQueryString(routerType: 'browser' | 'hash'): string {
+  if (typeof window === 'undefined') return '';
+  if (routerType === 'browser') {
+    return window.location.search ? window.location.search.replace(/^\?/, '') : '';
+  }
+  // hash mode
+  const rawHash = window.location.hash || '';
+  const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
+  const idx = hash.indexOf('?');
+  if (idx >= 0) {
+    return hash.slice(idx + 1);
+  }
+  return '';
+}
+
+/**
+ * Helper: write query string according to routerType. Preserves other parts of URL.
+ * Uses history.replaceState / pushState depending on replace flag in opts.
+ */
+function writeQueryString(routerType: 'browser' | 'hash', qp: URLSearchParams, replace: boolean) {
+  if (typeof window === 'undefined') return;
+  const qs = qp.toString();
+  if (routerType === 'browser') {
+    const pathname = window.location.pathname || '';
+    const hash = window.location.hash || '';
+    const newUrl = `${pathname}${qs ? '?' + qs : ''}${hash}`;
+    if (replace) {
+      window.history.replaceState(null, '', newUrl);
+    } else {
+      window.history.pushState(null, '', newUrl);
+    }
+    return;
+  }
+
+  // hash mode: preserve pathname + search, update hash portion while keeping hash's path before '?'
+  const rawHash = window.location.hash || '';
+  const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
+  const idx = hash.indexOf('?');
+  const base = idx >= 0 ? hash.slice(0, idx) : hash; // base may be '' or '/path' or '!' etc.
+  const newHash = `${base}${qs ? '?' + qs : ''}`;
+  const pathnameSearch = `${window.location.pathname || ''}${window.location.search || ''}`;
+  const newUrl = `${pathnameSearch}#${newHash}`;
+  if (replace) {
+    window.history.replaceState(null, '', newUrl);
+  } else {
+    window.history.pushState(null, '', newUrl);
+  }
 }
 
 export default class UrlSyncFlatClass {
   private opts: Required<UrlSyncFlatOptions>;
   private timer: number | null = null;
-  private popHandler?: () => void;
+  private changeHandler?: () => void;
 
   constructor(opts?: UrlSyncFlatOptions) {
     this.opts = { ...DEFAULTS, ...(opts || {}) };
@@ -67,7 +118,8 @@ export default class UrlSyncFlatClass {
     const defaults = params?.defaults ?? {};
     if (typeof window === 'undefined') return { ...defaults };
 
-    const qp = new URLSearchParams(window.location.search);
+    const rawQs = readQueryString(this.opts.routerType);
+    const qp = new URLSearchParams(rawQs);
     const result: UrlSyncFlatState = { ...defaults };
 
     // 如果提供了 fields 列表，则按列表读取；否则读取所有 query 中带 prefix 的键（去掉 prefix）
@@ -84,7 +136,6 @@ export default class UrlSyncFlatClass {
           const rawKey = key.slice(this.opts.prefix.length);
           result[rawKey] = parsePrimitive(value);
         } else {
-          // 如果没有 prefix，直接写入
           result[key] = parsePrimitive(value);
         }
       });
@@ -100,7 +151,10 @@ export default class UrlSyncFlatClass {
    */
   serializeStateToUrl(state: UrlSyncFlatState | undefined) {
     if (typeof window === 'undefined') return;
-    const qp = new URLSearchParams(window.location.search);
+
+    // start from existing query according to routerType
+    const rawQs = readQueryString(this.opts.routerType);
+    const qp = new URLSearchParams(rawQs);
 
     if (this.opts.fields && this.opts.fields.length > 0) {
       this.opts.fields.forEach((f) => {
@@ -127,37 +181,47 @@ export default class UrlSyncFlatClass {
       });
     }
 
-    const newUrl = `${window.location.pathname}${qp.toString() ? '?' + qp.toString() : ''}${window.location.hash || ''}`;
-    if (this.opts.replaceState) {
-      window.history.replaceState(null, '', newUrl);
-    } else {
-      window.history.pushState(null, '', newUrl);
-    }
+    writeQueryString(this.opts.routerType, qp, this.opts.replaceState);
   }
 
   /**
-   * Attach popstate listener; on change parse URL and call onChange(nextState)
-   * 返回 detach 函数
+   * Attach popstate/hashchange listener; on change parse URL and call onChange(nextState)
+   * Returns detach function.
    */
   attachPopstateListener(onChange: (next: UrlSyncFlatState) => void) {
     if (typeof window === 'undefined') return () => {};
+    // Create handler that reads according to routerType
     const handler = () => {
       const next = this.readInitialState();
       onChange(next);
     };
-    window.addEventListener('popstate', handler);
-    this.popHandler = handler;
+
+    if (this.opts.routerType === 'browser') {
+      window.addEventListener('popstate', handler);
+    } else {
+      // hash mode: listen for 'hashchange' to detect manual hash navigation
+      window.addEventListener('hashchange', handler);
+    }
+
+    this.changeHandler = handler;
     return () => {
-      window.removeEventListener('popstate', handler);
-      this.popHandler = undefined;
+      if (this.opts.routerType === 'browser') {
+        window.removeEventListener('popstate', handler);
+      } else {
+        window.removeEventListener('hashchange', handler);
+      }
+      this.changeHandler = undefined;
     };
   }
 
   detachPopstate() {
-    if (this.popHandler) {
-      window.removeEventListener('popstate', this.popHandler);
-      this.popHandler = undefined;
+    if (!this.changeHandler) return;
+    if (this.opts.routerType === 'browser') {
+      window.removeEventListener('popstate', this.changeHandler);
+    } else {
+      window.removeEventListener('hashchange', this.changeHandler);
     }
+    this.changeHandler = undefined;
   }
 
   /**
@@ -174,11 +238,17 @@ export default class UrlSyncFlatClass {
 
   flush(state: UrlSyncFlatState | undefined) {
     if (typeof window === 'undefined') return;
-    if (this.timer) { window.clearTimeout(this.timer); this.timer = null; }
+    if (this.timer) {
+      window.clearTimeout(this.timer);
+      this.timer = null;
+    }
     this.serializeStateToUrl(state);
   }
 
   cancel() {
-    if (this.timer) { window.clearTimeout(this.timer); this.timer = null; }
+    if (this.timer) {
+      window.clearTimeout(this.timer);
+      this.timer = null;
+    }
   }
 }
