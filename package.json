@@ -1,6 +1,6 @@
 {
   "name": "@jswork/url-sync-flat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Lightweight utility syncing flat state into URL query parameters.",
   "npmClient": "pnpm",
@@ -39,9 +39,11 @@
   },
   "homepage": "https://js.work",
   "keywords": [
-    "@jswork/url-sync-flat",
-    "url",
-    "sync"
+    "flat",
+    "params",
+    "querystring",
+    "sync",
+    "url"
   ],
   "dependencies": {
     "@types/sinon": "^17.0.4",

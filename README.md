@@ -9,27 +9,27 @@ Supports both browser (location.search) and hash (location.hash) routing modes.
 - Supports prefixing keys, push/replace history, debounced writes, and popstate/hashchange handling
 - Ideal for pagination, simple filters, keywords — not for nested objects
 
-## Installation
+## installation
 
 ```bash
 # npm
-npm install @jswork/@jswork/url-sync-flat
+npm install @jswork/url-sync-flat
 
 # yarn
-yarn add @jswork/@jswork/url-sync-flat
+yarn add @jswork/url-sync-flat
 ```
 
-## Import / Usage
+## import / usage
 
 ```js
-import UrlSyncFlat from '@jswork/@jswork/url-sync-flat';
+import UrlSyncFlat from '@jswork/url-sync-flat';
 ```
 
 ## Quick example (plain JS)
 
 ```html
 <script type="module">
-import UrlSyncFlat from '@jswork/@jswork/url-sync-flat';
+import UrlSyncFlat from '@jswork/url-sync-flat';
 
 // sync fields: page, pageSize, keyword; use browser router (location.search)
 const sync = new UrlSyncFlat({
@@ -66,7 +66,7 @@ const detach = sync.attachPopstateListener((nextState) => {
 
 ```tsx
 import React from 'react';
-import UrlSyncFlat from '@jswork/@jswork/url-sync-flat';
+import UrlSyncFlat from '@jswork/url-sync-flat';
 
 class MyTable extends React.Component {
   constructor(props) {
