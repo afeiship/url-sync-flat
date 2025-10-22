@@ -1,67 +1,43 @@
 {
-  "name": "generator-react-native-app",
-  "version": "0.0.0",
-  "description": "React native basic app code for react native.",
-  "homepage": "https://github.com/afeiship/generator-react-native-app",
-  "author": {
-    "name": "afeiship",
-    "email": "1290657123@qq.com",
-    "url": "https://github.com/afeiship"
-  },
-  "files": ["generators"],
-  "main": "generators/index.js",
-  "keywords": ["react native app yeoman", "yeoman-generator"],
-  "devDependencies": {
-    "yeoman-test": "^1.7.0",
-    "yeoman-assert": "^3.1.0",
-    "nsp": "^2.8.0",
-    "eslint": "^4.19.1",
-    "prettier": "^1.11.1",
-    "husky": "^0.14.3",
-    "lint-staged": "^6.1.1",
-    "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-prettier": "^2.6.0",
-    "eslint-config-xo": "^0.20.1",
-    "jest": "^22.0.6"
-  },
-  "engines": {
-    "npm": ">= 4.0.0"
-  },
-  "dependencies": {
-    "yeoman-generator": "^2.0.1",
-    "chalk": "^2.1.0",
-    "yosay": "^2.0.1"
-  },
-  "jest": {
-    "testEnvironment": "node"
-  },
+  "name": "@jswork/url-sync-flat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lightweight utility syncing flat state into URL query parameters.",
+  "npmClient": "pnpm",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "src",
+    "dist",
+    "global.d.ts"
+  ],
+  "prettier": "@jswork/style-guide/prettier",
   "scripts": {
-    "prepublishOnly": "nsp check",
-    "pretest": "eslint .",
-    "precommit": "lint-staged",
-    "test": "jest"
+    "build": "tsup",
+    "test": "bun test",
+    "release": "release-it"
   },
-  "lint-staged": {
-    "*.js": ["eslint --fix", "git add"],
-    "*.json": ["prettier --write", "git add"]
+  "license": "MIT",
+  "devDependencies": {
+    "@jswork/style-guide": "^1.0.3",
+    "@jswork/tsup-banner": "^1.0.4",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.11",
+    "esbuild-plugin-replace": "^1.4.0",
+    "esbuild-plugin-umd-wrapper": "^3.0.0",
+    "prettier": "^3.3.3",
+    "tsup": "^8.2.4",
+    "typescript": "^4.9.5"
   },
-  "eslintConfig": {
-    "extends": ["xo", "prettier"],
-    "env": {
-      "jest": true,
-      "node": true
-    },
-    "rules": {
-      "prettier/prettier": [
-        "error",
-        {
-          "singleQuote": true,
-          "printWidth": 90
-        }
-      ]
-    },
-    "plugins": ["prettier"]
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
-  "repository": "git@github.com:afeiship/generator-react-native-app.git",
-  "license": "MIT"
+  "homepage": "https://js.work",
+  "keywords": [
+    "@jswork/url-sync-flat",
+    "number",
+    "num"
+  ]
 }

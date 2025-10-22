@@ -1,36 +1,36 @@
-# generator-react-native-app [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
-> React native basic app code for react native.
+# @jswork/url-sync-flat
+> Lightweight utility syncing flat state into URL query parameters.
 
-## Installation
+[![version][version-image]][version-url]
+[![license][license-image]][license-url]
+[![size][size-image]][size-url]
+[![download][download-image]][download-url]
 
-First, install [Yeoman](http://yeoman.io) and generator-react-native-app using [npm](https://www.npmjs.com/) (we assume you have pre-installed [node.js](https://nodejs.org/)).
-
-```bash
-npm install -g yo
-npm install -g generator-react-native-app
+## installation
+```shell
+yarn add @jswork/@jswork/url-sync-flat
 ```
 
-Then generate your new project:
+## usage
+```js
+import urlSyncFlat from '@jswork/@jswork/url-sync-flat';
 
-```bash
-yo react-native-app
+urlSyncFlat(1024);
+
+// [1000, 0, 20, 4]
 ```
 
-## Getting To Know Yeoman
+## license
+Code released under [the MIT license](https://github.com/afeiship/@jswork/url-sync-flat/blob/master/LICENSE.txt).
 
- * Yeoman has a heart of gold.
- * Yeoman is a person with feelings and opinions, but is very easy to work with.
- * Yeoman can be too opinionated at times but is easily convinced not to be.
- * Feel free to [learn more about Yeoman](http://yeoman.io/).
+[version-image]: https://img.shields.io/npm/v/@jswork/@jswork/url-sync-flat
+[version-url]: https://npmjs.org/package/@jswork/@jswork/url-sync-flat
 
-## License
+[license-image]: https://img.shields.io/npm/l/@jswork/@jswork/url-sync-flat
+[license-url]: https://github.com/afeiship/@jswork/url-sync-flat/blob/master/LICENSE.txt
 
-MIT © [afeiship](https://github.com/afeiship)
+[size-image]: https://img.shields.io/bundlephobia/minzip/@jswork/@jswork/url-sync-flat
+[size-url]: https://github.com/afeiship/@jswork/url-sync-flat/blob/master/dist/@jswork/url-sync-flat.min.js
 
-
-[npm-image]: https://badge.fury.io/js/generator-react-native-app.svg
-[npm-url]: https://npmjs.org/package/generator-react-native-app
-[travis-image]: https://travis-ci.org/afeiship/generator-react-native-app.svg?branch=master
-[travis-url]: https://travis-ci.org/afeiship/generator-react-native-app
-[daviddm-image]: https://david-dm.org/afeiship/generator-react-native-app.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/afeiship/generator-react-native-app
+[download-image]: https://img.shields.io/npm/dm/@jswork/@jswork/url-sync-flat
+[download-url]: https://www.npmjs.com/package/@jswork/@jswork/url-sync-flat
