@@ -29,7 +29,7 @@ const DEFAULTS: Required<UrlSyncFlatOptions> = {
   fields: [],
   replaceState: true,
   debounceMs: 200,
-  routerType: 'browser',
+  routerType: 'hash',
 };
 
 function keyOf(prefix: string, k: string) {
