@@ -1,6 +1,6 @@
 
 
-import { test, expect, describe, beforeEach, afterAll, beforeAll } from 'bun:test';
+import { test, expect, describe, beforeEach, afterAll, beforeAll } from '@jest/globals';
 import sinon from 'sinon';
 
 import UrlSyncFlatClass from '../src';

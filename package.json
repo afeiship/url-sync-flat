@@ -20,6 +20,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@jest/globals": "^30.2.0",
     "@jswork/style-guide": "^1.0.3",
     "@jswork/tsup-banner": "^1.0.4",
     "@types/jest": "^29.5.12",
