@@ -39,5 +39,8 @@
     "@jswork/url-sync-flat",
     "number",
     "num"
-  ]
+  ],
+  "jest": {
+    "testEnvironment": "jsdom"
+  }
 }
