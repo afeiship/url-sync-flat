@@ -1,5 +1,3 @@
-
-
 import { test, expect, describe, beforeEach, afterAll, beforeAll } from '@jest/globals';
 import sinon from 'sinon';
 
@@ -26,13 +24,10 @@ describe('UrlSyncFlatClass', () => {
     setLocation('/');
   });
 
-
-
   test('readInitialState with fields + prefix parses numbers/booleans and applies defaults', () => {
     setLocation('/?t_page=2&t_flag=true&other=hello');
 
     const sync = new UrlSyncFlatClass({ prefix: 't_', fields: ['page', 'flag', 'missing'] });
-
     const state = sync.readInitialState({ defaults: { missing: 5 } });
 
     expect(state.page).toBe(2);
@@ -46,7 +41,6 @@ describe('UrlSyncFlatClass', () => {
     setLocation('/?keep=1');
 
     const sync = new UrlSyncFlatClass({ prefix: 'p_', fields: ['a', 'b'], replaceState: true });
-
     // write a= 'x' and b undefined -> should delete both p_b and b
     sync.serializeStateToUrl({ a: 'x', b: undefined });
 
@@ -60,7 +54,6 @@ describe('UrlSyncFlatClass', () => {
   test('serializeStateToUrl uses pushState when replaceState is false', () => {
     setLocation('/?orig=1');
     const sync = new UrlSyncFlatClass({ prefix: 'x_', fields: ['v'], replaceState: false });
-
     sync.serializeStateToUrl({ v: 42 });
 
     const qp = new URLSearchParams(window.location.search);
@@ -72,7 +65,6 @@ describe('UrlSyncFlatClass', () => {
     setLocation('/');
 
     const sync = new UrlSyncFlatClass({ prefix: '', fields: [], debounceMs: 100 });
-
     // schedule should delay writing
     sync.schedule({ a: 1 });
     // before timers run, no query
@@ -102,7 +94,6 @@ describe('UrlSyncFlatClass', () => {
 
     const sync = new UrlSyncFlatClass({ prefix: 't_', fields: ['n'] });
     const onChange = sinon.spy();
-
     const detach = sync.attachPopstateListener((next) => {
       onChange(next);
     });
