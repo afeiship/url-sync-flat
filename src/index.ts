@@ -82,33 +82,36 @@ function writeQueryString(routerType: 'browser' | 'hash', qp: URLSearchParams, r
   }
 
   // hash mode
-  const rawHash = window.location.hash || '';
-  const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
-  const idx = hash.indexOf('?');
-  const base = idx >= 0 ? hash.slice(0, idx) : hash;
+  const currentHashRaw = window.location.hash || '';
+  const currentHash = currentHashRaw.startsWith('#') ? currentHashRaw.slice(1) : currentHashRaw;
+  const idx = currentHash.indexOf('?');
+  const base = idx >= 0 ? currentHash.slice(0, idx) : currentHash;
   const newHash = `${base}${qs ? '?' + qs : ''}`;
-  const newUrl = `${window.location.pathname || ''}${window.location.search || ''}#${newHash}`;
+  const newHashWithHash = `#${newHash}`;
+
+  // Build full URLs for comparison
+  const pathnameSearch = `${window.location.pathname || ''}${window.location.search || ''}`;
+  const oldURL = pathnameSearch + currentHashRaw;
+  const newURL = pathnameSearch + newHashWithHash;
+
+  // Only update and trigger if there's an actual change
+  if (oldURL === newURL) {
+    return; // No change, do nothing
+  }
 
   // Update URL via history API
   if (replace) {
-    window.history.replaceState(null, '', newUrl);
+    window.history.replaceState(null, '', newURL);
   } else {
-    window.history.pushState(null, '', newUrl);
+    window.history.pushState(null, '', newURL);
   }
 
-  // Manually trigger hashchange event if hash actually changed
-  if (window.location.hash !== `#${newHash}`) {
-    // This shouldn't happen due to replaceState, but included for safety
-    window.location.hash = newHash;
-  } else {
-    // Since history.replaceState/pushState doesn't fire hashchange,
-    // we dispatch it manually.
-    const event = new HashChangeEvent('hashchange', {
-      oldURL: window.location.href.replace(/#[^]*$/, '') + rawHash,
-      newURL: window.location.href.replace(/#[^]*$/, '') + '#' + newHash
-    });
-    window.dispatchEvent(event);
-  }
+  // Manually dispatch hashchange event only when URLs differ
+  const event = new HashChangeEvent('hashchange', {
+    oldURL,
+    newURL
+  });
+  window.dispatchEvent(event);
 }
 
 export default class UrlSyncFlatClass {
