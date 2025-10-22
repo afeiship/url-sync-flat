@@ -1,4 +1,4 @@
-# @jswork/url-sync-flat
+# url-sync-flat
 > Lightweight utility syncing flat state into URL query parameters.
 
 [![version][version-image]][version-url]
