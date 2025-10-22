@@ -26,6 +26,8 @@
     "@types/node": "^20.12.11",
     "esbuild-plugin-replace": "^1.4.0",
     "esbuild-plugin-umd-wrapper": "^3.0.0",
+    "jsdom": "^27.0.1",
+    "jsdom-global": "^3.0.2",
     "prettier": "^3.3.3",
     "tsup": "^8.2.4",
     "typescript": "^4.9.5"
@@ -37,10 +39,11 @@
   "homepage": "https://js.work",
   "keywords": [
     "@jswork/url-sync-flat",
-    "number",
-    "num"
+    "url",
+    "sync"
   ],
-  "jest": {
-    "testEnvironment": "jsdom"
+  "dependencies": {
+    "@types/sinon": "^17.0.4",
+    "sinon": "^21.0.0"
   }
 }

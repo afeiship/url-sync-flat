@@ -1,10 +1,21 @@
-/**
- * @jest-environment jsdom
- */
+
+
+import { test, expect, describe, beforeEach, afterAll, beforeAll } from 'bun:test';
+import sinon from 'sinon';
 
 import UrlSyncFlatClass from '../src';
 
 describe('UrlSyncFlatClass', () => {
+  let clock;
+
+  beforeAll(() => {
+    clock = sinon.useFakeTimers();
+  });
+
+  afterAll(() => {
+    clock.restore();
+  });
+
   const setLocation = (url: string) => {
     // use history.replaceState to update jsdom location
     window.history.replaceState(null, '', url);
@@ -13,13 +24,9 @@ describe('UrlSyncFlatClass', () => {
   beforeEach(() => {
     // reset url and any timers/handlers
     setLocation('/');
-    jest.useRealTimers();
   });
 
-  afterEach(() => {
-    // ensure no leftover popstate handlers from tests
-    // (individual tests should detach when needed)
-  });
+
 
   test('readInitialState with fields + prefix parses numbers/booleans and applies defaults', () => {
     setLocation('/?t_page=2&t_flag=true&other=hello');
@@ -62,7 +69,6 @@ describe('UrlSyncFlatClass', () => {
   });
 
   test('schedule/flush/cancel debounce behavior', () => {
-    jest.useFakeTimers();
     setLocation('/');
 
     const sync = new UrlSyncFlatClass({ prefix: '', fields: [], debounceMs: 100 });
@@ -72,16 +78,16 @@ describe('UrlSyncFlatClass', () => {
     // before timers run, no query
     expect(window.location.search).toBe('');
     // advance less than debounce
-    jest.advanceTimersByTime(50);
+    clock.tick(50);
     expect(window.location.search).toBe('');
     // advance to trigger
-    jest.advanceTimersByTime(60);
+    clock.tick(60);
     expect(new URLSearchParams(window.location.search).get('a')).toBe('1');
 
     // test cancel
     sync.schedule({ b: 2 });
     sync.cancel();
-    jest.advanceTimersByTime(200);
+    clock.tick(200);
     expect(new URLSearchParams(window.location.search).get('b')).toBeNull();
 
     // test flush (immediate write)
@@ -89,15 +95,13 @@ describe('UrlSyncFlatClass', () => {
     // flush should write immediately
     sync.flush({ c: 3 });
     expect(new URLSearchParams(window.location.search).get('c')).toBe('3');
-
-    jest.useRealTimers();
   });
 
   test('attachPopstateListener triggers on popstate and detach removes it', () => {
     setLocation('/?t_n=3');
 
     const sync = new UrlSyncFlatClass({ prefix: 't_', fields: ['n'] });
-    const onChange = jest.fn();
+    const onChange = sinon.spy();
 
     const detach = sync.attachPopstateListener((next) => {
       onChange(next);
@@ -107,14 +111,14 @@ describe('UrlSyncFlatClass', () => {
     window.history.pushState(null, '', '/?t_n=4');
     window.dispatchEvent(new PopStateEvent('popstate'));
 
-    expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange.mock.calls[0][0].n).toBe(4);
+    expect(onChange.calledOnce).toBe(true);
+    expect(onChange.getCall(0).args[0].n).toBe(4);
 
     // detach and dispatch again -> should not be called further
     detach();
     window.history.pushState(null, '', '/?t_n=5');
     window.dispatchEvent(new PopStateEvent('popstate'));
-    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange.calledOnce).toBe(true);
   });
 
   test('readInitialState without fields reads all keys (removes prefix)', () => {
