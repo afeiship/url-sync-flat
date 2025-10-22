@@ -1,6 +1,6 @@
 {
   "name": "@jswork/url-sync-flat",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Lightweight utility syncing flat state into URL query parameters.",
   "npmClient": "pnpm",
   "main": "dist/index.cjs.js",
