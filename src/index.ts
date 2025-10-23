@@ -8,6 +8,8 @@
  * - routerType: 'browser' uses location.search + popstate; 'hash' uses location.hash + hashchange.
  */
 
+import HashQuery from '@jswork/hash-query';
+
 export type UrlSyncFlatOptions = {
   prefix?: string;
   fields?: string[]; // if provided (non-empty), only these fields are managed
@@ -52,11 +54,8 @@ function readQueryString(routerType: 'browser' | 'hash'): string {
   if (routerType === 'browser') {
     return window.location.search ? window.location.search.replace(/^\?/, '') : '';
   }
-  const rawHash = window.location.hash || '';
-  const hash = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
-  const idx = hash.indexOf('?');
-  if (idx >= 0) return hash.slice(idx + 1);
-  return '';
+  const hq = new HashQuery();
+  return hq.get().toString();
 }
 
 /**
@@ -67,12 +66,10 @@ function readQueryString(routerType: 'browser' | 'hash'): string {
 function writeQueryString(routerType: 'browser' | 'hash', qp: URLSearchParams, replace: boolean) {
   if (typeof window === 'undefined') return;
 
-  const qs = qp.toString();
-
   if (routerType === 'browser') {
     const pathname = window.location.pathname || '';
     const hash = window.location.hash || '';
-    const newUrl = `${pathname}${qs ? '?' + qs : ''}${hash}`;
+    const newUrl = `${pathname}${qp.toString() ? '?' + qp.toString() : ''}${hash}`;
     if (replace) {
       window.history.replaceState(null, '', newUrl);
     } else {
@@ -82,39 +79,11 @@ function writeQueryString(routerType: 'browser' | 'hash', qp: URLSearchParams, r
   }
 
   // hash mode
-  const currentHashRaw = window.location.hash || '';
-  const currentHash = currentHashRaw.startsWith('#') ? currentHashRaw.slice(1) : currentHashRaw;
-  const idx = currentHash.indexOf('?');
-  const base = idx >= 0 ? currentHash.slice(0, idx) : currentHash;
-  const newHash = `${base}${qs ? '?' + qs : ''}`;
-  const newHashWithHash = `#${newHash}`;
-
-  // Build full URLs for comparison
-  const pathnameSearch = `${window.location.pathname || ''}${window.location.search || ''}`;
-  const oldURL = pathnameSearch + currentHashRaw;
-  const newURL = pathnameSearch + newHashWithHash;
-
-  // Only update and trigger if there's an actual change
-  if (oldURL === newURL) {
-    return; // No change, do nothing
-  }
-
-  // Update URL via history API
-  if (replace) {
-    window.history.replaceState(null, '', newURL);
-  } else {
-    window.history.pushState(null, '', newURL);
-  }
-
-  // Manually dispatch hashchange event only when URLs differ
-  const event = new HashChangeEvent('hashchange', {
-    oldURL,
-    newURL
-  });
-  window.dispatchEvent(event);
+  const hq = new HashQuery();
+  hq.set(qp, replace);
 }
 
-export default class UrlSyncFlatClass {
+export default class UrlSyncFlat {
   private opts: Required<UrlSyncFlatOptions>;
   private timer: number | null = null;
   private changeHandler?: () => void;
