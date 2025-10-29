@@ -156,7 +156,7 @@ export default class UrlSyncFlat {
       Object.keys(state).forEach((f) => {
         const val = state[f];
         const k = keyOf(this.opts.prefix, f);
-        if (val === undefined || val === '') {
+        if (val == undefined || val === '') {
           qp.delete(k);
           qp.delete(f);
         } else {
