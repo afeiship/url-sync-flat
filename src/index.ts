@@ -231,3 +231,6 @@ export default class UrlSyncFlat {
     }
   }
 }
+
+
+export { readQueryString, writeQueryString }
