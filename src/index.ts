@@ -49,13 +49,14 @@ function parsePrimitive(v: string | null): string | number | boolean | undefined
  * - browser -> location.search (without leading ?)
  * - hash -> take substring after first '?' inside the hash (if any)
  */
-function readQueryString(routerType: 'browser' | 'hash'): string {
-  if (typeof window === 'undefined') return '';
+function readSearchString(routerType: 'browser' | 'hash'): URLSearchParams {
+  if (typeof window === 'undefined') return new URLSearchParams('');
   if (routerType === 'browser') {
-    return window.location.search ? window.location.search.replace(/^\?/, '') : '';
+    const search = window.location.search ? window.location.search.replace(/^\?/, '') : '';
+    return new URLSearchParams(search);
   }
   const hq = new HashQuery();
-  return hq.get().toString();
+  return hq.get();
 }
 
 /**
@@ -63,7 +64,7 @@ function readQueryString(routerType: 'browser' | 'hash'): string {
  * For browser: update pathname + ?qp + hash
  * For hash: update hash's query portion while preserving hash base.
  */
-function writeQueryString(routerType: 'browser' | 'hash', qp: URLSearchParams, replace: boolean) {
+function writeSearchString(routerType: 'browser' | 'hash', qp: URLSearchParams, replace: boolean) {
   if (typeof window === 'undefined') return;
 
   if (routerType === 'browser') {
@@ -101,8 +102,8 @@ export default class UrlSyncFlat {
     const defaults = params?.defaults ?? {};
     if (typeof window === 'undefined') return { ...defaults };
 
-    const rawQs = readQueryString(this.opts.routerType);
-    const qp = new URLSearchParams(rawQs);
+    // const rawQs = readQueryString(this.opts.routerType);
+    const qp = readSearchString(this.opts.routerType);
     const result: UrlSyncFlatState = { ...defaults };
 
     if (this.opts.fields && this.opts.fields.length > 0) {
@@ -138,8 +139,7 @@ export default class UrlSyncFlat {
   serializeStateToUrl(state: UrlSyncFlatState | undefined) {
     if (typeof window === 'undefined') return;
 
-    const rawQs = readQueryString(this.opts.routerType);
-    const qp = new URLSearchParams(rawQs);
+    const qp = readSearchString(this.opts.routerType);
 
     if (this.opts.fields && this.opts.fields.length > 0) {
       this.opts.fields.forEach((f) => {
@@ -165,7 +165,7 @@ export default class UrlSyncFlat {
       });
     }
 
-    writeQueryString(this.opts.routerType, qp, this.opts.replaceState);
+    writeSearchString(this.opts.routerType, qp, this.opts.replaceState);
   }
 
   /**
@@ -232,5 +232,4 @@ export default class UrlSyncFlat {
   }
 }
 
-
-export { readQueryString, writeQueryString }
+export { readSearchString, writeSearchString };
